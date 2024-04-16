@@ -1,5 +1,9 @@
-addi x2, x0, x1
-beq x6, x0, x2
-sub x3, x6, x2
-sh x4, x2, x3
-srl x0, x2, x2
+lh x1, 16(x2)
+sh x3, 14(x4)
+sub x6, x5, x7
+or x8, x9, x10
+andi x11, x5, 9
+srl x12, x3, 3
+beq x15, x16, 4
+andi x2, x1, 16
+andi x3, x2, -243
