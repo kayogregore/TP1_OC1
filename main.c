@@ -7,6 +7,14 @@
 char* Converter(char* valor) {
     int num = atoi(valor); // Converte a string para um inteiro
 
+    // Se o número for negativo, faça a conversão com o complemento de dois
+    if (num < 0) {
+        // Inverte todos os bits
+        num = ~num;
+        // Adiciona 1 ao resultado
+        num += 1;
+    }
+
     // Calcula o tamanho necessário para a string binária
     int bits = 0;
     int temp = num;
@@ -69,7 +77,7 @@ void ConverterComplemento(char *binario) {
     adicionar_um(binario); // Adicionar 1 ao resultado
 }
 
-void MontarInstrucao(char* instrucao, FILE* output) {
+void MontarInstrucao(char* instrucao) {
     char funct7[8] = "0000000";
     char rs2[6] = "00000";
     char rs1[6] = "00000";
@@ -81,41 +89,85 @@ void MontarInstrucao(char* instrucao, FILE* output) {
     char* binario = NULL;
 
     char comando[10];
-    char arg1[10], arg2[10], arg3[10], arg4[10], arg5[10];
+    char arg1[10], arg2[10], arg3[10];
 
-    sscanf(instrucao, "%s %[^,], %[^,], %[^,], %[^,], %[^\n]", comando, arg1, arg2, arg3, arg4, arg5);
+    sscanf(instrucao, "%s  %[^,], %[^,], %[^\n]", comando, arg1, arg2, arg3);
+
+    char* delimitadores = " ,()"; // Espaço, vírgula e parênteses
+    char* token;
 
     char flag_formato = '0';
 
     if (strcmp(comando, "sub") == 0) {
         flag_formato = 'R';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
         strcpy(funct7, "0100000");
         strcpy(funct3, "000");
         strcpy(opcode, "0110011");
     } else if (strcmp(comando, "srl") == 0) {
         flag_formato = 'R';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
         strcpy(funct7, "0000000");
         strcpy(funct3, "101");
         strcpy(opcode, "0110011");
     } else if (strcmp(comando, "or") == 0) {
         flag_formato = 'R';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
         strcpy(funct7, "0000000");
         strcpy(funct3, "110");
         strcpy(opcode, "0110011");
     } else if (strcmp(comando, "lh") == 0) {
         flag_formato = 'I';
+        // Obtém a primeira palavra
+        token = strtok(comando, delimitadores);
+        int i = 0;
+
+        // Continua enquanto houver palavras
+        while (token != NULL) {
+            if (strcmp(token, " ") == 0) {
+                strcpy(comando, token);
+            } else if (strcmp(token, ",") == 0) {
+                strcpy(arg1, token);
+            } else if (strcmp(token, "(") == 0) {
+                strcpy(arg2,  token);
+            } else if (strcmp(token, ")") == 0) {
+                strcpy(arg3 , token);
+            }
+            i++;
+            token = strtok(NULL, delimitadores);
+        }
         strcpy(funct3, "001");
         strcpy(opcode, "0000011");
     } else if (strcmp(comando, "sh") == 0) {
         flag_formato = 'I';
+token = strtok(comando, delimitadores);
+        int i = 0;
+
+        // Continua enquanto houver palavras
+        while (token != NULL) {
+            if (strcmp(token, " ") == 0) {
+                strcpy(comando, token);
+            } else if (strcmp(token, ",") == 0) {
+                strcpy(arg1, token);
+            } else if (strcmp(token, "(") == 0) {
+                strcpy(arg2,  token);
+            } else if (strcmp(token, ")") == 0) {
+                strcpy(arg3 , token);
+            }
+            i++;
+            token = strtok(NULL, delimitadores);
+        }
+
         strcpy(funct3, "001");
         strcpy(opcode, "0100011");
     } else if (strcmp(comando, "andi") == 0) {
         flag_formato = 'I';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
         strcpy(funct3, "111");
         strcpy(opcode, "0010011");
     } else if (strcmp(comando, "beq") == 0) {
         flag_formato = 'I';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
         strcpy(funct3, "000");
         strcpy(opcode, "1100011");
     }
@@ -145,19 +197,11 @@ void MontarInstrucao(char* instrucao, FILE* output) {
             free(binario);
         }
         
-        fprintf(output, "%s %s %s %s %s %s ", funct7, rs2, rs1, funct3, rd, opcode);
+        printf("%s%s%s%s%s%s \n", funct7, rs2, rs1, funct3, rd, opcode);
     }
 
     //conversao para formato I
     if (flag_formato == 'I'){
-        // Converte o valor imediato para binário usando o complemento de dois
-        if (arg4[0] >= '0' && arg4[0] <= '9') {
-            binario = Converter(arg4);
-            // ConverterComplemento(binario);
-            copiarValor(binario, immediate);
-            free(binario);
-        }
-        // Converte os registradores para binário
         if (arg1[0] == 'x') {
             arg1[0] = '0';
             binario = Converter(arg1);
@@ -169,72 +213,47 @@ void MontarInstrucao(char* instrucao, FILE* output) {
             binario = Converter(arg2);
             copiarValor(binario, rs1);
             free(binario);
+        }else if (arg2[0] >= '0' && arg2[0] <= '9') {
+            binario = Converter(arg2);
+            ConverterComplemento(binario);
+            copiarValor(binario, immediate);
+            free(binario);
         }
         if (arg3[0] == 'x') {
             arg3[0] = '0';
             binario = Converter(arg3);
             copiarValor(binario, rs2);
             free(binario);
-        }
-        if (arg5[0] == 'x') {
-            arg5[0] = '0';
-            binario = Converter(arg5);
-            // ConverterComplemento(binario);
+        } else if (arg3[0] >= '0' && arg3[0] <= '9') {
+            binario = Converter(arg3);
+            ConverterComplemento(binario);
             copiarValor(binario, immediate);
             free(binario);
         }
 
-        fprintf(output, "%s %s %s %s %s ", immediate, rs1, funct3, rd, opcode);
+        printf("%s%s%s%s%s \n", immediate, rs1, funct3, rd, opcode);
     }
-
-    // Contador de bits
-    int bits_count = 0;
-    if (flag_formato == 'R') {
-        bits_count += strlen(funct7) + strlen(rs2) + strlen(rs1) + strlen(funct3) + strlen(rd) + strlen(opcode);
-    } else if (flag_formato == 'I') {
-        bits_count += strlen(immediate) + strlen(rs1) + strlen(funct3) + strlen(rd) + strlen(opcode);
-    }
-    fprintf(output, "%d\n", bits_count); // Adiciona o contador de bits no final da linha
 }
 
-
-int main(int argc, char *argv[]) {
-    if (argc != 4) {
-        printf("Uso correto: %s arquivo_entrada.asm -o arquivo_saida\n", argv[0]);
-        return 1;
-    }
-
+int main() {
     FILE *file;
-    FILE *output;
-    char *filename = argv[1]; // Nome do arquivo asm
-    char *outputFilename = argv[3]; // Nome do arquivo de saída
+    char filename[] = "/home/kayo/oc1/TP1_OC1/arquivo.asm"; // Nome do arquivo asm
     char linha[100]; // String para armazenar uma linha do arquivo
 
-    // Abrir o arquivo para leitura
+    // Abre o arquivo para leitura
     file = fopen(filename, "r");
     if (file == NULL) {
-        printf("Erro ao abrir o arquivo de entrada.\n");
+        printf("Erro ao abrir o arquivo.\n");
         return 1;
     }
 
-    // Abrir o arquivo de saída para escrita
-    output = fopen(outputFilename, "w");
-    if (output == NULL) {
-        printf("Erro ao criar o arquivo de saída.\n");
-        fclose(file);
-        return 1;
-    }
-
-    // Ler linha por linha e montar as instruções
+    // Lê o arquivo linha por linha e imprime a saída no terminal
     while (fgets(linha, sizeof(linha), file)) {
-        MontarInstrucao(linha, output);
+        MontarInstrucao(linha);
     }
 
-    // Fechar os arquivos
+    // Fecha o arquivo
     fclose(file);
-    fclose(output);
-
-    printf("Arquivo de saída gerado com sucesso: %s\n", outputFilename);
 
     return 0;
 }
