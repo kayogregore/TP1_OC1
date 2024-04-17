@@ -118,11 +118,10 @@ void MontarInstrucao(char* instrucao) {
         strcpy(opcode, "0110011");
     } else if (strcmp(comando, "lh") == 0) {
         flag_formato = 'I';
-        // Obtém a primeira palavra
+
+        //redefinindo variaveis para se adequar ao formato da instrucao ("comando arg1, arg2(arg3)")
         token = strtok(comando, delimitadores);
         int i = 0;
-
-        // Continua enquanto houver palavras
         while (token != NULL) {
             if (strcmp(token, " ") == 0) {
                 strcpy(comando, token);
@@ -140,10 +139,10 @@ void MontarInstrucao(char* instrucao) {
         strcpy(opcode, "0000011");
     } else if (strcmp(comando, "sh") == 0) {
         flag_formato = 'I';
-token = strtok(comando, delimitadores);
-        int i = 0;
 
-        // Continua enquanto houver palavras
+        //redefinindo variaveis para se adequar ao formato da instrucao ("comando arg1, arg2(arg3)")
+        token = strtok(comando, delimitadores);
+        int i = 0;
         while (token != NULL) {
             if (strcmp(token, " ") == 0) {
                 strcpy(comando, token);
@@ -157,7 +156,6 @@ token = strtok(comando, delimitadores);
             i++;
             token = strtok(NULL, delimitadores);
         }
-
         strcpy(funct3, "001");
         strcpy(opcode, "0100011");
     } else if (strcmp(comando, "andi") == 0) {
@@ -171,7 +169,45 @@ token = strtok(comando, delimitadores);
         strcpy(funct3, "000");
         strcpy(opcode, "1100011");
     }
+
+    //Implementação de outras instruções fora do conjunto obrigatorio 
     
+    if (strcmp(comando, "add") == 0) {
+        flag_formato = 'R';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
+        strcpy(funct7, "0000000");
+        strcpy(funct3, "000");
+        strcpy(opcode, "0110011");
+    } else if (strcmp(comando, "sll") == 0) {
+        flag_formato = 'R';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
+        strcpy(funct7, "0000000");
+        strcpy(funct3, "001");
+        strcpy(opcode, "0110011");
+    } else if (strcmp(comando, "xor") == 0) {
+        flag_formato = 'R';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
+        strcpy(funct7, "0000000");
+        strcpy(funct3, "100");
+        strcpy(opcode, "0110011");
+    } else if (strcmp(comando, "and") == 0) {
+        flag_formato = 'R';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
+        strcpy(funct7, "0000000");
+        strcpy(funct3, "111");
+        strcpy(opcode, "0110011");
+    } else if (strcmp(comando, "addi") == 0) {
+        flag_formato = 'I';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
+        strcpy(funct3, "000");
+        strcpy(opcode, "0010011");
+    } else if (strcmp(comando, "slti") == 0) {
+        flag_formato = 'I';
+        sscanf(instrucao, "%s %s, %s, %s", comando, arg1, arg2, arg3);
+        strcpy(funct3, "010");
+        strcpy(opcode, "0010011");
+    }
+
     //convercao para formato R
     if(flag_formato == 'R'){
         if (arg1[0] == 'x') {
@@ -191,7 +227,7 @@ token = strtok(comando, delimitadores);
             binario = Converter(arg3);
             copiarValor(binario, immediate);
             free(binario);
-        } else if (arg3[0] >= '0' && arg3[0] <= '9') {
+        } else if (arg3[0] == '-' || arg3[0] >= '0' || arg3[0] <= '9') {
             binario = Converter(arg3);
             copiarValor(binario, rs2);
             free(binario);
@@ -213,7 +249,7 @@ token = strtok(comando, delimitadores);
             binario = Converter(arg2);
             copiarValor(binario, rs1);
             free(binario);
-        }else if (arg2[0] >= '0' && arg2[0] <= '9') {
+        }else if (arg2[0] == '-' || arg2[0] >= '0' || arg2[0] <= '9') {
             binario = Converter(arg2);
             ConverterComplemento(binario);
             copiarValor(binario, immediate);
@@ -224,7 +260,7 @@ token = strtok(comando, delimitadores);
             binario = Converter(arg3);
             copiarValor(binario, rs2);
             free(binario);
-        } else if (arg3[0] >= '0' && arg3[0] <= '9') {
+        } else if (arg3[0] == '-' || arg3[0] >= '0' || arg3[0] <= '9') {
             binario = Converter(arg3);
             ConverterComplemento(binario);
             copiarValor(binario, immediate);
