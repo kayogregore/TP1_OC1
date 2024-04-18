@@ -77,7 +77,7 @@ void ConverterComplemento(char *binario) {
     adicionar_um(binario); // Adicionar 1 ao resultado
 }
 
-void MontarInstrucao(char* instrucao) {
+void MontarInstrucao(char* instrucao, FILE* output) {
     char funct7[8] = "0000000";
     char rs2[6] = "00000";
     char rs1[6] = "00000";
@@ -233,7 +233,7 @@ void MontarInstrucao(char* instrucao) {
             free(binario);
         }
         
-        printf("%s%s%s%s%s%s \n", funct7, rs2, rs1, funct3, rd, opcode);
+        fprintf(output, "%s%s%s%s%s%s\n", funct7, rs2, rs1, funct3, rd, opcode); // Escreve no arquivo de saída
     }
 
     //conversao para formato I
@@ -267,29 +267,47 @@ void MontarInstrucao(char* instrucao) {
             free(binario);
         }
 
-        printf("%s%s%s%s%s \n", immediate, rs1, funct3, rd, opcode);
+        fprintf(output, "%s%s%s%s%s\n", immediate, rs1, funct3, rd, opcode); // Escreve no arquivo de saída
     }
 }
 
-int main() {
-    FILE *file;
-    char filename[] = "/home/kayo/oc1/TP1_OC1/arquivo.asm"; // Nome do arquivo asm
-    char linha[100]; // String para armazenar uma linha do arquivo
-
-    // Abre o arquivo para leitura
-    file = fopen(filename, "r");
-    if (file == NULL) {
-        printf("Erro ao abrir o arquivo.\n");
+int main(int argc, char *argv[]) {
+    if (argc != 4) {
+        printf("Uso correto: %s arquivo_entrada.asm -o arquivo_saida\n", argv[0]);
         return 1;
     }
 
-    // Lê o arquivo linha por linha e imprime a saída no terminal
-    while (fgets(linha, sizeof(linha), file)) {
-        MontarInstrucao(linha);
+    FILE *file;
+    FILE *output;
+    char *filename = argv[1]; // Nome do arquivo asm
+    char *outputFilename = argv[3]; // Nome do arquivo de saída
+    char linha[100]; // String para armazenar uma linha do arquivo
+
+    // Abrir o arquivo para leitura
+    file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Erro ao abrir o arquivo de entrada.\n");
+        return 1;
     }
 
-    // Fecha o arquivo
+    // Abrir o arquivo de saída para escrita
+    output = fopen(outputFilename, "w");
+    if (output == NULL) {
+        printf("Erro ao criar o arquivo de saída.\n");
+        fclose(file);
+        return 1;
+    }
+
+    // Ler linha por linha e montar as instruções
+    while (fgets(linha, sizeof(linha), file)) {
+        MontarInstrucao(linha, output);
+    }
+
+    // Fechar os arquivos
     fclose(file);
+    fclose(output);
+
+    printf("Arquivo de saída gerado com sucesso: %s\n", outputFilename);
 
     return 0;
 }
